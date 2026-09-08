@@ -779,6 +779,23 @@ export const eventCatalog = {
     guestId: z.string().uuid(),
     clientId: z.string().uuid().nullable(),
   }),
+  // B10 — emitted by Iiko when an entry goes live on the site. **The payload is the id and the locale, not the
+  // entry itself**: the event announces a fact and says where to look. Carrying the body would turn it into a
+  // second copy of the entry that goes stale the moment someone edits it, and into an event that grows without
+  // bound along with the piece's markdown.
+  //
+  // `locale` is there because **publishing is ATOMIC ACROSS LANGUAGES** (§B10 step 4): Iiko does not publish an
+  // entry until it exists in both, so this event fires once per language and whoever rebuilds a feed knows which
+  // one is theirs. Without it, a consumer would have to guess which file to invalidate.
+  //
+  // CONSUMER: `developers.niiko.org` (SP-12), which regenerates its static feed on receiving this. While that
+  // consumer is not wired up, the event is emitted all the same — a fact with no listener is still the fact, and
+  // a producer that waits for an audience is the one nobody ends up writing.
+  "iiko.entry.published": z.object({
+    entryId: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+    locale: z.enum(["es", "en"]),
+    kind: z.enum(["release", "note"]),
+  }),
 } as const satisfies Record<string, z.ZodType>;
 
 export type EventName = keyof typeof eventCatalog;
