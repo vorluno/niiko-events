@@ -657,6 +657,26 @@ export const eventCatalog = {
     thresholdTier: z.enum(["day_3", "day_1"]),
     trialEndsAt: z.string(), // ISO-8601
   }),
+  // ADR-N205 (2026-09-21) — the seven-day grace period and the downgrade to Free. Emitted by the daily grace sweep,
+  // edge-triggered with deterministic dedup like `trial_ending`:
+  //   · `grace_notice`: the notice to the owner on day 0 (the payment failed), 3 and 6 of the grace period — `day` says
+  //     which one, and `graceUntil` is the deadline the email shows;
+  //   · `downgraded_to_free`: the org moved to Free — `previousPlanSlug` where it came from, `reason` why (the grace
+  //     period ran out, or the paid period of a cancellation ran out). The data stays; the modules Free doesn't
+  //     include stay closed.
+  // Consumer: Notifications #9 (Resend email to the owner, same path as `trial_ending`). `organizationId` travels in
+  // the envelope, never in the payload. No prices in the payload: the consumer resolves them from the catalog on send.
+  "platform.subscription.grace_notice": z.object({
+    subscriptionId: z.string(),
+    planSlug: z.string(),
+    day: z.union([z.literal(0), z.literal(3), z.literal(6)]),
+    graceUntil: z.string(), // ISO-8601
+  }),
+  "platform.subscription.downgraded_to_free": z.object({
+    subscriptionId: z.string().nullable(), // null if the org never had PayPal (e.g. an `incomplete` from the backfill)
+    previousPlanSlug: z.string(),
+    reason: z.enum(["grace_expired", "canceled"]),
+  }),
   // The per-customer workbench.
   //
   // `status_changed` is emitted ONLY by the domain transition function, in the same transaction as the update —
