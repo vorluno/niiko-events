@@ -193,6 +193,20 @@ export const eventCatalog = {
     source: z.string(),
     outcome: z.string(),
   }),
+  // A web lead that also brings a BRIEF: the answers to a longer form ("tell us about your project"), stored
+  // as versions. It goes out next to `miira.lead.captured`, not instead of it: the lead is the same fact, the
+  // brief is what it carries on top. `version` is 1 on the first submission and goes up when the lead rewrites
+  // it; `budgetRange` travels as the RANGE they picked ("10k-20k"), never a made-up number. Who consumes it:
+  // the CRM, to open the deal with that budget.
+  "miira.lead.brief_submitted": z.object({
+    clientId: z.string().uuid(),
+    briefId: z.string().uuid(),
+    version: z.number().int().positive(),
+    source: z.string(),
+    budgetRange: z.string().nullable(),
+    timeline: z.string().nullable(),
+    sector: z.string().nullable(),
+  }),
   // Emitted when the DETERMINISTIC anti-spam gate rejects a submission before any model runs, so a spam attempt
   // costs nothing. No personal data — only the reason: a honeypot, a disposable email, an invalid identity.
   "miira.lead.spam_blocked": z.object({
