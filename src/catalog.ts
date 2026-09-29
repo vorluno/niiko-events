@@ -285,6 +285,16 @@ export const eventCatalog = {
   "miira.lead.handoff_requested": leadAlertPayload,
   "miira.lead.sla_breached": leadAlertPayload,
   "miira.lead.stalled_detected": leadAlertPayload,
+  // The agent read buying intent in a turn (high interest, or intent to purchase — as the main intent or a
+  // secondary one). Published once per turn by the agent turn itself (deduplicated per turn) and consumed by the
+  // handler that opens the deal in the sales pipeline. Different from handoff_requested, which also fires on
+  // frustration or off-script messages — neither of those is a sale.
+  // No personal data: only the lead id and the turn id.
+  "miira.lead.purchase_signal": z.object({
+    clientId: z.string().uuid(),
+    signal: z.enum(["interes_alto", "purchase_intent"]),
+    agentTurnId: z.string().uuid(),
+  }),
   // The nudge sweeper queued a proactive follow-up, attempt N. An append-only, idempotent trail: the id is derived
   // from the organisation, the lead, the attempt and the last inbound. Off the real-time channel — no board
   // refreshes because of it.

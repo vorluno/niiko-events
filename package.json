@@ -1,6 +1,6 @@
 {
   "name": "niiko-events",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The event catalog of niiko: every event defined once, with its payload schema.",
   "keywords": ["events", "event-catalog", "zod", "sse", "typescript"],
   "homepage": "https://github.com/vorluno/niiko-events#readme",
