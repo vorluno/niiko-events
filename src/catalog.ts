@@ -312,6 +312,15 @@ export const eventCatalog = {
     configVersion: z.number().int(),
     changedAreas: z.array(z.string()),
   }),
+  // The agent held back a reply and left a pending decision for a person. It exists for the live channel
+  // (`CANAL_A_EVENTS`): the open thread rehydrates and the pending card shows up without a reload.
+  // No personal data: ids, plus the reason as an enum (`null` when the reason is outside the inbox vocabulary).
+  "miira.agent.draft_held": z.object({
+    conversationId: z.string().uuid(),
+    clientId: z.string().uuid().nullable(),
+    agentTurnId: z.string().uuid(),
+    reason: z.string().nullable(),
+  }),
   // ── Outbound campaigns ────────────────────────────────────────────────────────────────────────────
   // Emitted when the cost-and-ETA screen is confirmed. The payload IS the snapshot of that estimate — the rates
   // used, their version, the ETA — so the post-campaign report can audit estimated against actual within ten

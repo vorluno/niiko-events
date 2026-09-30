@@ -38,6 +38,9 @@ export const CANAL_A_EVENTS: ReadonlySet<EventName> = new Set<EventName>([
   // thread would only show the failure if the operator reloaded on their own — that is, if they already suspected.
   "messaging.message.failed",
   "core.client.status_changed", // a lead became qualified
+  // ★ the agent held back a reply and left a pending decision: the thread's card shows up without a reload. The
+  // contact's message arrives through `inbox.message.received` BEFORE the turn decides, so it was not enough to see it.
+  "miira.agent.draft_held",
 ]);
 
 /** Does this event type travel on this channel? (It accepts a plain `string` for the worker's call site.) */
