@@ -57,6 +57,19 @@ export const eventCatalog = {
     from: z.string(),
     to: z.string(),
   }),
+  // Emitted when a credit note voids an issued invoice, in the same transaction as the note and alongside the
+  // invoice's `core.invoice.status_changed` to `void`. `creditedToAdvance` is what the client had already paid, which
+  // now becomes credit in their favor (`grantId` identifies it when it is above zero). The accounting ledger consumes
+  // it to move that amount from receivables to customer advances; the `status_changed` event reverses the issuance.
+  "core.credit_note.issued": z.object({
+    creditNoteId: z.string().uuid(),
+    invoiceId: z.string().uuid(),
+    number: z.string(),
+    currency: z.literal("USD"),
+    total: z.string(), // numeric(18,2) as a string, like every other amount in the catalog
+    creditedToAdvance: z.string(),
+    grantId: z.string().uuid().optional(),
+  }),
   // Emitted on every entry written to the consent ledger, which is append-only.
   "messaging.consent.recorded": z.object({
     contactId: z.string().uuid(),
@@ -559,6 +572,30 @@ export const eventCatalog = {
     creditGranted: z
       .object({ grantId: z.string(), amount: z.string(), reason: z.enum(["overpayment", "goodwill", "prepayment"]) })
       .optional(), // present ONLY if the allocation left a remainder and credit was granted in the SAME transaction
+  }),
+  // Emitted in the same transaction as the compensating entries of payment `approvalId`. `allocations` is what that
+  // payment had applied to each installment and is now unapplied; `creditReversed`, the credit balance it had left
+  // and that is withdrawn. The accounting ledger books the mirror of the payment's own entry, linked to the original
+  // as its reversal.
+  "kiipu.payment.reversed": z.object({
+    reversalId: z.string().uuid(),
+    approvalId: z.string(),
+    invoiceId: z.string().uuid(),
+    currency: z.literal("USD"),
+    amount: z.string(),
+    method: z.enum(["comprobante", "compensación"]),
+    allocations: z.array(z.object({ installmentId: z.string().uuid(), amountReversed: z.string() })),
+    creditReversed: z.string(),
+  }),
+  // Emitted in the same transaction in which a client's credit balance is applied to the installments of one of
+  // their invoices. No new money comes in, so it is not a `kiipu.payment.applied`: the accounting ledger books it as a
+  // debit to customer advances and a credit to receivables for the sum of the allocations.
+  "kiipu.credit.applied": z.object({
+    applicationId: z.string().uuid(),
+    invoiceId: z.string().uuid(),
+    currency: z.literal("USD"),
+    amountApplied: z.string(),
+    allocations: z.array(z.object({ installmentId: z.string().uuid(), amountAllocated: z.string() })),
   }),
   // Emitted by the daily dunning worker for each instalment newly found overdue. Idempotent per instalment per
   // day, so re-running the sweep the SAME day does not re-emit. Different from the idempotency of the reminder's
