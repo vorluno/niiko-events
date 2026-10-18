@@ -13,6 +13,9 @@ const leadAlertPayload = z.object({
   reason: z.enum(["sla_breached", "stalled_detected", "handoff_requested"]),
   thresholdTier: z.string(),
   lastInboundAt: z.string(), // ISO-8601
+  // The conversation it refers to, ONLY on `handoff_requested` (one thread is escalated). `sla_breached` and
+  // `stalled_detected` belong to the lead, not to a thread, and do not carry it. Optional: earlier events do not have it.
+  conversationId: z.string().uuid().optional(),
 });
 
 // The event catalog: every event is defined ONCE, here, with its payload schema. The name is always
