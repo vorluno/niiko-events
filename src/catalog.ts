@@ -18,6 +18,14 @@ const leadAlertPayload = z.object({
   conversationId: z.string().uuid().optional(),
 });
 
+// The notification center's kinds. A copy of the notifications table's `kind`: this file is public and cannot
+// import the database schema, so a test on the database side keeps both lists equal.
+export const NOTIFICATION_KINDS = [
+  "reminder", "handoff", "sla", "stalled", "scored_up", "approval", "proposal_accepted", "proposal_change",
+  "proposal_contract_due", "fiilz_milestone_billable", "contract_stalled", "contract_expiring", "agent_action",
+  "contract_voided_invoiced",
+] as const;
+
 // The event catalog: every event is defined ONCE, here, with its payload schema. The name is always
 // `module.entity.action`. `publish()` validates against this catalog, so there is no such thing as an ad-hoc
 // event. Modules add theirs as they are built.
@@ -411,6 +419,27 @@ export const eventCatalog = {
     granted: z.boolean(),         // the new state (true = on, false = off)
     previous: z.boolean().nullable(), // the previous state (null = a new row, with no override before)
     changedBy: z.string().uuid(), // the operator who flipped it
+  }),
+  // Phone notifications (push.md §6.3): the ONLY door through which the notification center reaches beyond the
+  // web. `created` is published by `createNotification` in the same transaction, and only when the row is new (a
+  // redelivery of the same fact does not notify again). `resolved` is published by whoever moves the row out of
+  // `pending`: reading it, dismissing it, deciding on a draft, or a sweep that switches it off (`resolvedBy` null).
+  // Ids and enums only: the phone fetches the details separately. The organization travels in the event envelope,
+  // as in the rest of the catalog.
+  "core.notification.created": z.object({
+    notificationId: z.string().uuid(),
+    recipientUserId: z.string().uuid(),
+    kind: z.enum(NOTIFICATION_KINDS),
+    priority: z.enum(["normal", "high"]),
+    conversationId: z.string().uuid().nullable(),
+    hasProposal: z.boolean(), // a draft "with money": never approved from the notification
+  }),
+  "core.notification.resolved": z.object({
+    notificationId: z.string().uuid(),
+    recipientUserId: z.string().uuid(),
+    kind: z.enum(NOTIFICATION_KINDS),
+    status: z.enum(["read", "dismissed", "approved", "edited", "discarded"]),
+    resolvedBy: z.string().uuid().nullable(),
   }),
   // The CRM's catalog is born in this phase; the real producers arrive with a later wave. `stage_changed`, `won`
   // and `lost` are mutually exclusive per event: won and lost carry their own type rather than travelling as a
