@@ -23,7 +23,7 @@ const leadAlertPayload = z.object({
 export const NOTIFICATION_KINDS = [
   "reminder", "handoff", "sla", "stalled", "scored_up", "approval", "proposal_accepted", "proposal_change",
   "proposal_contract_due", "fiilz_milestone_billable", "contract_stalled", "contract_expiring", "agent_action",
-  "contract_voided_invoiced",
+  "contract_voided_invoiced", "spend_cap",
 ] as const;
 
 // The event catalog: every event is defined ONCE, here, with its payload schema. The name is always
@@ -694,7 +694,7 @@ export const eventCatalog = {
     subscriptionId: z.string().uuid(),
     periodKey: z.string(),
     offsetDays: z.number().int(),
-    channel: z.enum(["whatsapp"]),
+    channel: z.enum(["whatsapp", "email"]),
   }),
   // The general ledger. Emitted through the transactional outbox in the SAME transaction as the posting — every
   // time a journal entry is posted, whether automatic, a manual adjustment, a period close, or a prior-period
