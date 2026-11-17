@@ -23,7 +23,7 @@ const leadAlertPayload = z.object({
 export const NOTIFICATION_KINDS = [
   "reminder", "handoff", "sla", "stalled", "scored_up", "approval", "proposal_accepted", "proposal_change",
   "proposal_contract_due", "fiilz_milestone_billable", "contract_stalled", "contract_expiring", "agent_action",
-  "contract_voided_invoiced", "spend_cap",
+  "contract_voided_invoiced", "spend_cap", "whatsapp_account",
 ] as const;
 
 // The event catalog: every event is defined ONCE, here, with its payload schema. The name is always
