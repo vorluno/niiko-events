@@ -373,6 +373,13 @@ export const eventCatalog = {
       suppressed: z.number().int(),
     }),
   }),
+  // A Wiiro campaign that the engine PAUSES on its own, and why: the balance does not cover the batch, the domain
+  // stopped sending, or the brakes tripped (bounces, complaints, no delivery signal). The screen shows these reasons.
+  "miira.campaign.paused_by_brake": z.object({
+    campaignId: z.string().uuid(),
+    motivo: z.enum(["rebotes", "quejas", "saldo", "remitente", "sin_senal"]),
+    senderMode: z.enum(["own_domain", "shared_niiko"]),
+  }),
   // The recipient's lifecycle, projected from the provider's status webhooks. A reply also stops the sequence and
   // revives the pipeline.
   "miira.recipient.delivered": z.object({
