@@ -167,6 +167,34 @@ export const eventCatalog = {
     conversationId: z.string().uuid(),
     candidateClientIds: z.array(z.string().uuid()),
   }),
+  // WhatsApp calls (numbers-and-calls spec §10.2, 18/11/2026). Emitted by the workers' calls webhook, in the same
+  // transaction that writes `inbox.calls`, and received by the web app over channel A so the call rings in the
+  // browser of whoever handles the number. NONE carries the SDP, the audio or the customer's phone number: only ids
+  // and enums. `endpointId` is the business number (`messaging.channel_endpoints`); `conversationId` is null when the
+  // caller has no thread yet.
+  "inbox.call.ringing": z.object({
+    callId: z.string().uuid(),
+    endpointId: z.string().uuid(),
+    conversationId: z.string().uuid().nullable(),
+    direction: z.enum(["inbound", "outbound"]),
+  }),
+  // Outbound call: Meta sent its SDP answer and the caller's browser can now connect (it fetches it through the action).
+  "inbox.call.answer_received": z.object({
+    callId: z.string().uuid(),
+  }),
+  "inbox.call.answered": z.object({
+    callId: z.string().uuid(),
+    endpointId: z.string().uuid(),
+    answeredByUserId: z.string().uuid().nullable(),
+  }),
+  "inbox.call.ended": z.object({
+    callId: z.string().uuid(),
+    endpointId: z.string().uuid(),
+    conversationId: z.string().uuid().nullable(),
+    direction: z.enum(["inbound", "outbound"]),
+    endReason: z.enum(["completed", "missed", "rejected", "cancelled", "failed"]).nullable(),
+    durationS: z.number().int().nonnegative().nullable(),
+  }),
   // The support module. Its producers arrive with a later slice of the plan — until then these live in the catalog
   // as a contract, because the rule is to declare before emitting. The text of a ticket NEVER travels in the
   // payload: it lives encrypted with the message. Only ids and enums.

@@ -41,6 +41,12 @@ export const CANAL_A_EVENTS: ReadonlySet<EventName> = new Set<EventName>([
   // ★ the agent held back a reply and left a pending decision: the thread's card shows up without a reload. The
   // contact's message arrives through `inbox.message.received` BEFORE the turn decides, so it was not enough to see it.
   "miira.agent.draft_held",
+  // WhatsApp calls (numbers-and-calls spec §9.1): the call RINGS in the web app of whoever handles the number. There are
+  // 30 to 60 s to answer: without this channel the browser does not find out until it reloads. None carries SDP or a phone number.
+  "inbox.call.ringing",
+  "inbox.call.answer_received",
+  "inbox.call.answered",
+  "inbox.call.ended",
 ]);
 
 /** Does this event type travel on this channel? (It accepts a plain `string` for the worker's call site.) */
