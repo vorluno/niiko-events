@@ -814,6 +814,48 @@ export const eventCatalog = {
     previousPlanSlug: z.string(),
     reason: z.enum(["grace_expired", "canceled"]),
   }),
+  // B89 (ADR-K027, 2026-11-24) — a plan set or removed BY HAND by staff (a confirmed bank transfer, a courtesy plan,
+  // a cancellation). The staff console emits them in the SAME transaction as the change; the consumer notifies the owner
+  // by email and records each notice per channel (WhatsApp, once there is an approved template). `reason` is a key from
+  // a closed list (the consumer supplies the EN/ES text), never free text. No prices: they are read from the catalog when
+  // notifying.
+  "platform.subscription.plan_set": z.object({
+    planSlug: z.string(),
+    method: z.enum(["transferencia", "cortesia"]),
+    reason: z.string(),
+    periodEnd: z.string(), // ISO-8601 — how long it covers
+  }),
+  "platform.subscription.plan_canceled": z.object({
+    planSlug: z.string(),
+    reason: z.string(),
+    accessUntil: z.string(), // ISO-8601 — how long it keeps the plan; after that, Free
+  }),
+  // B89 part 3c (ADR-K027 §6, 24/11/2026) — the order for a plan paid BY BANK TRANSFER, in the buying org (the
+  // envelope). Each one is a notice to the customer, by email and by WhatsApp with a template from the billing org; the
+  // `plan-a-mano-aviso` consumer records each channel. `amountUsd` is the price snapshot the order stored
+  // (numeric as a string, no floats). The rejection `reason` is what the team wrote, already trimmed.
+  "platform.order.receipt_received": z.object({
+    orderId: z.string().uuid(),
+    code: z.string(),
+    amountUsd: z.string(),
+  }),
+  "platform.order.receipt_in_review": z.object({
+    orderId: z.string().uuid(),
+    code: z.string(),
+  }),
+  "platform.order.receipt_rejected": z.object({
+    orderId: z.string().uuid(),
+    code: z.string(),
+    reason: z.string().min(1).max(300),
+  }),
+  // The daily sweep emits it seven days before the period ends, with the renewal order already created and invoiced.
+  "platform.order.renewal_due": z.object({
+    orderId: z.string().uuid(),
+    code: z.string(),
+    planSlug: z.string(),
+    amountUsd: z.string(),
+    periodEnd: z.string(), // ISO-8601 — the end of the period being renewed
+  }),
   // The per-customer workbench.
   //
   // `status_changed` is emitted ONLY by the domain transition function, in the same transaction as the update —
