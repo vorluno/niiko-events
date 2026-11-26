@@ -856,6 +856,12 @@ export const eventCatalog = {
     amountUsd: z.string(),
     periodEnd: z.string(), // ISO-8601 — the end of the period being renewed
   }),
+  "platform.order.created": z.object({
+    orderId: z.string().uuid(),
+    code: z.string(),
+    amountUsd: z.string(),
+    vence: z.string(),
+  }),
   // The per-customer workbench.
   //
   // `status_changed` is emitted ONLY by the domain transition function, in the same transaction as the update —
